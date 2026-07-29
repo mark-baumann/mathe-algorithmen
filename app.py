@@ -290,8 +290,8 @@ elif page == "Distanzmetriken":
     | Metrik | Formel | Anwendung |
     |--------|--------|-----------|
     | **Euklidisch (L2)** | √Σ(aᵢ - bᵢ)² | k-NN, Clustering, allgemein |
-    | **Manhattan (L1)** | Σ\|aᵢ - bᵢ\| | Hochdimensionale Daten, robust gegen Ausreißer |
-    | **Cosinus-Ähnlichkeit** | a·b / (\|\|a\|\|·\|\|b\|\|) | Text-Embeddings, Empfehlungssysteme |
+    | **Manhattan (L1)** | Σ|aᵢ - bᵢ| | Hochdimensionale Daten, robust gegen Ausreißer |
+    | **Cosinus-Ähnlichkeit** | a·b / (||a||·||b||) | Text-Embeddings, Empfehlungssysteme |
     | **Cosinus-Distanz** | 1 - Cosinus-Ähnlichkeit | Gleiche Anwendung wie Cosinus-Ähnlichkeit |
     """)
 

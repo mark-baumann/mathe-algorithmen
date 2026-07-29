@@ -5,22 +5,21 @@ Testet alle mathematischen Algorithmen mit pytest.
 """
 
 import numpy as np
-import pytest
+
 from math_algorithms import (
-    softmax,
-    sigmoid,
-    normalize,
-    standardize,
+    cosine_distance,
+    cosine_similarity,
+    cross_entropy,
+    entropy,
+    euclidean_distance,
     gradient_descent_1d,
     gradient_descent_2d,
-    entropy,
-    cross_entropy,
     kl_divergence,
-    euclidean_distance,
-    cosine_similarity,
-    cosine_distance,
+    normalize,
+    sigmoid,
+    softmax,
+    standardize,
 )
-
 
 # ═══════════════════════════════════════════════════════════════
 # Lineare Algebra
@@ -119,29 +118,45 @@ class TestStandardize:
 class TestGradientDescent1D:
     def test_quadratic(self):
         """Minimum von f(x)=x² bei x=0."""
-        f = lambda x: x**2
-        df = lambda x: 2 * x
+        def f(x):
+            return x**2
+
+        def df(x):
+            return 2 * x
+
         x_min, history = gradient_descent_1d(f, df, x0=5.0, lr=0.1)
         assert abs(x_min) < 1e-4
 
     def test_history_grows(self):
         """History enthält mindestens Start- und Endwert."""
-        f = lambda x: x**2
-        df = lambda x: 2 * x
+        def f(x):
+            return x**2
+
+        def df(x):
+            return 2 * x
+
         _, history = gradient_descent_1d(f, df, x0=5.0, lr=0.1)
         assert len(history) >= 2
 
     def test_early_stop(self):
         """Toleranz-basierter Abbruch funktioniert."""
-        f = lambda x: x**2
-        df = lambda x: 2 * x
+        def f(x):
+            return x**2
+
+        def df(x):
+            return 2 * x
+
         x_min, history = gradient_descent_1d(f, df, x0=5.0, lr=0.1, tol=1e-3)
         assert len(history) < 100  # sollte früh stoppen
 
     def test_shifted_quadratic(self):
         """Minimum von f(x)=(x-3)² bei x=3."""
-        f = lambda x: (x - 3) ** 2
-        df = lambda x: 2 * (x - 3)
+        def f(x):
+            return (x - 3) ** 2
+
+        def df(x):
+            return 2 * (x - 3)
+
         x_min, _ = gradient_descent_1d(f, df, x0=0.0, lr=0.1)
         assert abs(x_min - 3.0) < 1e-4
 
@@ -149,15 +164,23 @@ class TestGradientDescent1D:
 class TestGradientDescent2D:
     def test_quadratic_2d(self):
         """Minimum von f(x,y)=x²+y² bei (0,0)."""
-        f = lambda x: x[0] ** 2 + x[1] ** 2
-        grad_f = lambda x: np.array([2 * x[0], 2 * x[1]])
+        def f(x):
+            return x[0] ** 2 + x[1] ** 2
+
+        def grad_f(x):
+            return np.array([2 * x[0], 2 * x[1]])
+
         x_min, _ = gradient_descent_2d(f, grad_f, np.array([3.0, 4.0]), lr=0.1)
         assert np.linalg.norm(x_min) < 1e-4
 
     def test_history_contains_copies(self):
         """History-Einträge sind Kopien, keine Referenzen."""
-        f = lambda x: x[0] ** 2 + x[1] ** 2
-        grad_f = lambda x: np.array([2 * x[0], 2 * x[1]])
+        def f(x):
+            return x[0] ** 2 + x[1] ** 2
+
+        def grad_f(x):
+            return np.array([2 * x[0], 2 * x[1]])
+
         _, history = gradient_descent_2d(f, grad_f, np.array([3.0, 4.0]))
         # Alle Einträge sollten unterschiedliche Objekte sein
         for i in range(len(history) - 1):
@@ -165,8 +188,12 @@ class TestGradientDescent2D:
 
     def test_early_stop_2d(self):
         """Toleranz-basierter Abbruch in 2D."""
-        f = lambda x: x[0] ** 2 + x[1] ** 2
-        grad_f = lambda x: np.array([2 * x[0], 2 * x[1]])
+        def f(x):
+            return x[0] ** 2 + x[1] ** 2
+
+        def grad_f(x):
+            return np.array([2 * x[0], 2 * x[1]])
+
         _, history = gradient_descent_2d(f, grad_f, np.array([3.0, 4.0]), lr=0.1, tol=1e-3)
         assert len(history) < 100
 

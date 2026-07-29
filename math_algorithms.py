@@ -5,9 +5,9 @@ Gradient Descent, Matrix-Operationen, Wahrscheinlichkeit —
 die mathematischen Grundlagen für KI.
 """
 
-import numpy as np
-from typing import Callable, Tuple
+from collections.abc import Callable
 
+import numpy as np
 
 # ═══════════════════════════════════════════════════════════════
 # Lineare Algebra
@@ -47,7 +47,7 @@ def gradient_descent_1d(
     df: Callable[[float], float],
     x0: float, lr: float = 0.1,
     epochs: int = 100, tol: float = 1e-6
-) -> Tuple[float, list]:
+) -> tuple[float, list]:
     """
     Gradient Descent für 1D-Funktionen.
     Findet das Minimum von f(x).
@@ -73,7 +73,7 @@ def gradient_descent_2d(
     grad_f: Callable[[np.ndarray], np.ndarray],
     x0: np.ndarray, lr: float = 0.1,
     epochs: int = 100, tol: float = 1e-6
-) -> Tuple[np.ndarray, list]:
+) -> tuple[np.ndarray, list]:
     """
     Gradient Descent für mehrdimensionale Funktionen.
 
@@ -151,14 +151,21 @@ if __name__ == "__main__":
     print(f"\nSoftmax({logits}): {softmax(logits)}")
 
     # Gradient Descent: f(x) = x², f'(x) = 2x
-    f = lambda x: x**2
-    df = lambda x: 2 * x
+    def f(x):
+        return x**2
+
+    def df(x):
+        return 2 * x
+
     x_min, hist = gradient_descent_1d(f, df, x0=5.0, lr=0.1)
     print(f"\nGD: min von x² bei x={x_min:.6f} (erwartet: 0)")
 
     # 2D: f(x,y) = x² + y²
-    f2d = lambda x: x[0]**2 + x[1]**2
-    grad_f2d = lambda x: np.array([2*x[0], 2*x[1]])
+    def f2d(x):
+        return x[0]**2 + x[1]**2
+
+    def grad_f2d(x):
+        return np.array([2*x[0], 2*x[1]])
     x_min_2d, _ = gradient_descent_2d(f2d, grad_f2d, np.array([3.0, 4.0]))
     print(f"GD 2D: min von x²+y² bei {x_min_2d} (erwartet: [0,0])")
 

@@ -1,16 +1,17 @@
 """
-Streamlit-App: Mathe-Algorithmen für Machine Learning
-======================================================
+Streamlit-App: Mathematische Algorithmen für Machine Learning
+=============================================================
 Gradient Descent animieren, Entropie berechnen, Distanzmetriken vergleichen.
 """
 
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
-from pathlib import Path
+from matplotlib.animation import FuncAnimation
 import sys
+import os
 
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, os.path.dirname(__file__))
 from math_algorithms import (
     gradient_descent_1d, gradient_descent_2d,
     entropy, cross_entropy, kl_divergence,
@@ -18,380 +19,373 @@ from math_algorithms import (
     softmax, sigmoid, normalize, standardize,
 )
 
-st.set_page_config(page_title="Mathe-Algorithmen", page_icon="📐", layout="wide")
-st.title("📐 Mathe-Algorithmen für Machine Learning")
-st.markdown("Gradient Descent, Entropie, Distanzmetriken — die mathematischen Grundlagen der KI")
+st.set_page_config(page_title="Mathe-Algorithmen für ML", layout="wide")
+st.title("📐 Mathematische Algorithmen für Machine Learning")
+st.markdown("### Gradient Descent, Entropie & Distanzmetriken — interaktiv")
 
-page = st.sidebar.radio(
-    "Bereich wählen",
-    ["Gradient Descent", "Entropie & Information", "Distanzmetriken", "Aktivierungsfunktionen"]
-)
+tab1, tab2, tab3, tab4 = st.tabs([
+    "📉 Gradient Descent", "🎲 Entropie & Information", "📏 Distanzmetriken", "🧮 Aktivierungsfunktionen"
+])
 
-# ═══════════════════════════════════════════════════════════════════════════
-# GRADIENT DESCENT
-# ═══════════════════════════════════════════════════════════════════════════
-if page == "Gradient Descent":
-    st.header("📉 Gradient Descent — Interaktiv")
+# ═══════════════════════════════════════════════════════════════
+# Tab 1: Gradient Descent
+# ═══════════════════════════════════════════════════════════════
+with tab1:
+    st.header("📉 Gradient Descent — interaktiv")
 
-    st.markdown("""
-    **Gradient Descent** ist der fundamentale Optimierungsalgorithmus für Machine Learning.
-    
-    Die Idee: Folge dem negativen Gradienten, um das Minimum einer Funktion zu finden.
-    
-    **Update-Regel:** `x_new = x_old - learning_rate * gradient`
+    st.markdown(r"""
+    **Gradient Descent** ist der fundamentale Optimierungsalgorithmus im Machine Learning.
+    Er findet das Minimum einer Funktion, indem er iterativ dem negativen Gradienten folgt.
+
+    **Update-Regel:** $x_{t+1} = x_t - \eta \cdot \nabla f(x_t)$
+
+    - $\eta$ (Learning Rate): Schrittweite
+    - $\nabla f(x_t)$: Gradient (Richtung des steilsten Anstiegs)
     """)
 
-    tab1, tab2 = st.tabs(["1D (eine Variable)", "2D (zwei Variablen)"])
+    st.subheader("1D Gradient Descent: $f(x) = x^2$")
 
-    with tab1:
-        st.subheader("1D-Gradient-Descent: f(x) = x²")
+    col_gd1, col_gd2 = st.columns([1, 2])
 
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            x0 = st.slider("Startwert x₀", -10.0, 10.0, 5.0, 0.5)
-        with col2:
-            lr = st.selectbox("Learning-Rate", [0.01, 0.05, 0.1, 0.2, 0.5, 0.9], index=2, key="lr1d")
-        with col3:
-            epochs = st.slider("Epochen", 5, 50, 20, key="ep1d")
+    with col_gd1:
+        x0 = st.slider("Startpunkt $x_0$", -10.0, 10.0, 5.0, 0.5)
+        lr = st.select_slider("Learning Rate $\eta$", options=[0.01, 0.05, 0.1, 0.2, 0.5, 0.9], value=0.1)
+        n_steps = st.slider("Anzahl Schritte", 5, 50, 20)
 
-        if st.button("Gradient Descent starten", key="gd1d"):
-            def f(x):
-                return x**2
-            def df(x):
-                return 2*x
+    with col_gd2:
+        # Führe GD aus
+        def f(x):
+            return x**2
+        def df(x):
+            return 2 * x
 
-            x_min, history = gradient_descent_1d(f, df, x0, lr=lr, epochs=epochs)
+        x_min, history = gradient_descent_1d(f, df, x0=x0, lr=lr, epochs=n_steps)
 
-            # Plot
-            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+        # Plot
+        fig_gd, ax_gd = plt.subplots(figsize=(10, 6))
+        x_range = np.linspace(-max(abs(x0)*1.5, 10), max(abs(x0)*1.5, 10), 500)
+        ax_gd.plot(x_range, f(x_range), 'b-', linewidth=2, label='f(x) = x²')
+        ax_gd.scatter(history, [f(x) for x in history], c=range(len(history)),
+                      cmap='Reds', s=50, zorder=5, edgecolors='black')
+        ax_gd.plot(history, [f(x) for x in history], 'r--', alpha=0.5, linewidth=1)
+        ax_gd.scatter([x_min], [f(x_min)], c='green', s=200, zorder=6,
+                      edgecolors='black', marker='*', label=f'Minimum: x={x_min:.4f}')
+        ax_gd.set_xlabel('x')
+        ax_gd.set_ylabel('f(x)')
+        ax_gd.set_title(f'Gradient Descent: {len(history)} Schritte → Minimum bei x={x_min:.4f}',
+                        fontweight='bold')
+        ax_gd.legend()
+        ax_gd.grid(True, alpha=0.3)
+        st.pyplot(fig_gd)
 
-            # Funktionsplot mit Pfad
-            x_range = np.linspace(-max(abs(x0)*1.5, 10), max(abs(x0)*1.5, 10), 500)
-            ax1.plot(x_range, f(x_range), "b-", linewidth=2, label="f(x) = x²")
-            ax1.scatter(history, [f(h) for h in history], c=range(len(history)),
-                       cmap="Reds", s=50, zorder=5, edgecolors="white")
-            ax1.scatter([x_min], [f(x_min)], color="green", s=200, marker="*",
-                       zorder=6, label=f"Minimum: x={x_min:.4f}")
-            ax1.set_xlabel("x")
-            ax1.set_ylabel("f(x)")
-            ax1.set_title("Gradient-Descent-Pfad auf f(x) = x²")
-            ax1.legend()
-            ax1.grid(True, alpha=0.3)
+        st.metric("Gefundenes Minimum", f"x = {x_min:.6f}", f"Ziel: 0.0")
 
-            # Konvergenz
-            ax2.plot(history, "r-o", linewidth=2, markersize=4)
-            ax2.axhline(y=0, color="green", linestyle="--", label="Optimum (x=0)")
-            ax2.set_xlabel("Iteration")
-            ax2.set_ylabel("x-Wert")
-            ax2.set_title("Konvergenz von x gegen 0")
-            ax2.legend()
-            ax2.grid(True, alpha=0.3)
+    st.subheader("2D Gradient Descent: $f(x, y) = x^2 + y^2$")
 
-            st.pyplot(fig)
+    col_gd2d1, col_gd2d2 = st.columns([1, 2])
 
-            st.success(f"Minimum gefunden bei x = {x_min:.6f} (erwartet: 0)")
+    with col_gd2d1:
+        x0_2d = st.slider("Startpunkt x₀", -10.0, 10.0, 3.0, 0.5, key="x0_2d")
+        y0_2d = st.slider("Startpunkt y₀", -10.0, 10.0, 4.0, 0.5, key="y0_2d")
+        lr_2d = st.select_slider("Learning Rate", options=[0.01, 0.05, 0.1, 0.2, 0.5], value=0.1, key="lr_2d")
+        n_steps_2d = st.slider("Schritte", 5, 50, 15, key="steps_2d")
 
-    with tab2:
-        st.subheader("2D-Gradient-Descent: f(x,y) = x² + y²")
+    with col_gd2d2:
+        def f2d(x):
+            return x[0]**2 + x[1]**2
+        def grad_f2d(x):
+            return np.array([2*x[0], 2*x[1]])
 
-        col1, col2 = st.columns(2)
-        with col1:
-            x0_2d = st.slider("Startwert x₀", -10.0, 10.0, 3.0, 0.5, key="x0_2d")
-        with col2:
-            y0_2d = st.slider("Startwert y₀", -10.0, 10.0, 4.0, 0.5, key="y0_2d")
+        x_min_2d, history_2d = gradient_descent_2d(
+            f2d, grad_f2d, np.array([x0_2d, y0_2d]), lr=lr_2d, epochs=n_steps_2d
+        )
 
-        lr_2d = st.selectbox("Learning-Rate", [0.01, 0.05, 0.1, 0.2, 0.5], index=2, key="lr2d")
+        # Contour-Plot
+        fig_2d, ax_2d = plt.subplots(figsize=(8, 7))
+        x_range_2d = np.linspace(-max(abs(x0_2d), abs(y0_2d))*1.5, max(abs(x0_2d), abs(y0_2d))*1.5, 200)
+        y_range_2d = np.linspace(-max(abs(x0_2d), abs(y0_2d))*1.5, max(abs(x0_2d), abs(y0_2d))*1.5, 200)
+        X, Y = np.meshgrid(x_range_2d, y_range_2d)
+        Z = X**2 + Y**2
 
-        if st.button("Gradient Descent starten", key="gd2d"):
-            def f2d(x):
-                return x[0]**2 + x[1]**2
-            def grad_f2d(x):
-                return np.array([2*x[0], 2*x[1]])
+        contour = ax_2d.contour(X, Y, Z, levels=20, cmap='Blues', alpha=0.6)
+        ax_2d.clabel(contour, inline=True, fontsize=8)
 
-            x0 = np.array([x0_2d, y0_2d])
-            x_min, history = gradient_descent_2d(f2d, grad_f2d, x0, lr=lr_2d, epochs=50)
-            history = np.array(history)
+        hist_arr = np.array(history_2d)
+        ax_2d.plot(hist_arr[:, 0], hist_arr[:, 1], 'r-o', markersize=6, linewidth=2, label='GD-Pfad')
+        ax_2d.scatter([x0_2d], [y0_2d], c='orange', s=150, zorder=5, edgecolors='black',
+                      marker='s', label=f'Start ({x0_2d}, {y0_2d})')
+        ax_2d.scatter([x_min_2d[0]], [x_min_2d[1]], c='green', s=200, zorder=5,
+                      edgecolors='black', marker='*', label=f'Min ({x_min_2d[0]:.3f}, {x_min_2d[1]:.3f})')
+        ax_2d.set_xlabel('x')
+        ax_2d.set_ylabel('y')
+        ax_2d.set_title('2D Gradient Descent auf f(x,y) = x² + y²', fontweight='bold')
+        ax_2d.legend()
+        ax_2d.grid(True, alpha=0.3)
+        st.pyplot(fig_2d)
 
-            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
-
-            # Contour-Plot
-            r = max(abs(x0_2d), abs(y0_2d)) * 1.5
-            x_vals = np.linspace(-r, r, 100)
-            y_vals = np.linspace(-r, r, 100)
-            X, Y = np.meshgrid(x_vals, y_vals)
-            Z = X**2 + Y**2
-
-            ax1.contour(X, Y, Z, levels=20, cmap="Blues", alpha=0.6)
-            ax1.plot(history[:, 0], history[:, 1], "r-o", linewidth=2, markersize=4)
-            ax1.scatter([0], [0], color="green", s=200, marker="*", zorder=6, label="Minimum (0,0)")
-            ax1.set_xlabel("x")
-            ax1.set_ylabel("y")
-            ax1.set_title("Gradient-Descent-Pfad (Contour)")
-            ax1.legend()
-            ax1.set_aspect("equal")
-
-            # Konvergenz
-            distances = np.sqrt(history[:, 0]**2 + history[:, 1]**2)
-            ax2.plot(distances, "r-o", linewidth=2, markersize=4)
-            ax2.axhline(y=0, color="green", linestyle="--", label="Optimum")
-            ax2.set_xlabel("Iteration")
-            ax2.set_ylabel("Distanz zum Optimum")
-            ax2.set_title("Konvergenz: Distanz zu (0,0)")
-            ax2.legend()
-            ax2.grid(True, alpha=0.3)
-
-            st.pyplot(fig)
-
-            st.success(f"Minimum gefunden bei ({x_min[0]:.6f}, {x_min[1]:.6f}) (erwartet: (0, 0))")
-
-# ═══════════════════════════════════════════════════════════════════════════
-# ENTROPIE & INFORMATION
-# ═══════════════════════════════════════════════════════════════════════════
-elif page == "Entropie & Information":
-    st.header("📊 Entropie & Informationstheorie")
-
+    st.subheader("📖 Learning Rate: Zu klein vs. zu groß")
     st.markdown("""
-    **Shannon-Entropie** misst die Unsicherheit einer Wahrscheinlichkeitsverteilung.
-    
-    H = -Σ pᵢ · log₂(pᵢ)
-    
-    - **Hohe Entropie** = hohe Unsicherheit (z.B. fairer Münzwurf: 1 Bit)
-    - **Niedrige Entropie** = hohe Sicherheit (z.B. gezinkte Münze: nahe 0 Bit)
+    | Learning Rate | Effekt |
+    |--------------|--------|
+    | Zu klein (0.001) | 🐌 Sehr langsame Konvergenz, viele Schritte nötig |
+    | Optimal (0.1) | ✅ Schnelle, stabile Konvergenz |
+    | Zu groß (0.9) | 🎢 Oszillation, springt über Minimum hinweg |
+    | Viel zu groß (2.0) | 💥 Divergenz, entfernt sich vom Minimum |
     """)
 
-    col1, col2 = st.columns(2)
+# ═══════════════════════════════════════════════════════════════
+# Tab 2: Entropie & Information
+# ═══════════════════════════════════════════════════════════════
+with tab2:
+    st.header("🎲 Entropie & Informationstheorie")
 
-    with col1:
-        st.subheader("Entropie berechnen")
-        st.markdown("Gib Wahrscheinlichkeiten ein (Summe = 1):")
+    st.markdown(r"""
+    **Entropie** misst die Unsicherheit einer Wahrscheinlichkeitsverteilung.
 
-        p1 = st.slider("p₁", 0.0, 1.0, 0.5, 0.01)
-        p2 = 1.0 - p1
+    **Shannon-Entropie:** $H(P) = -\sum_i p_i \cdot \log_2(p_i)$
 
-        probs = np.array([p1, p2])
-        ent = entropy(probs)
+    - $H = 0$: völlige Sicherheit (eine Klasse hat $p=1$)
+    - $H = \log_2(n)$: maximale Unsicherheit (Gleichverteilung)
+    """)
 
-        st.metric("Entropie", f"{ent:.4f} Bit")
+    st.subheader("Entropie-Rechner")
 
-        # Visualisierung
-        p_range = np.linspace(0.01, 0.99, 100)
-        entropies = [entropy(np.array([p, 1-p])) for p in p_range]
+    col_ent1, col_ent2 = st.columns(2)
 
-        fig, ax = plt.subplots(figsize=(8, 4))
-        ax.plot(p_range, entropies, "b-", linewidth=2)
-        ax.scatter([p1], [ent], color="red", s=100, zorder=5)
-        ax.set_xlabel("p₁ (Wahrscheinlichkeit Klasse 1)")
-        ax.set_ylabel("Entropie (Bit)")
-        ax.set_title("Entropie einer Binärverteilung")
-        ax.axvline(x=0.5, color="gray", linestyle="--", alpha=0.5, label="Maximale Entropie")
-        ax.legend()
-        ax.grid(True, alpha=0.3)
-        st.pyplot(fig)
+    with col_ent1:
+        st.markdown("**Eigene Verteilung eingeben:**")
+        n_classes = st.slider("Anzahl Klassen", 2, 10, 4, key="n_classes_ent")
+        probs = []
+        remaining = 1.0
+        for i in range(n_classes - 1):
+            p = st.slider(f"p_{i+1}", 0.0, remaining, remaining / (n_classes - i), 0.01, key=f"p_{i}")
+            probs.append(p)
+            remaining -= p
+        probs.append(remaining)
+        st.caption(f"p_{n_classes} = {remaining:.3f} (Rest)")
 
-    with col2:
-        st.subheader("KL-Divergenz")
-        st.markdown("""
-        **Kullback-Leibler-Divergenz** misst, wie sehr sich zwei Verteilungen unterscheiden.
-        
-        D_KL(P||Q) = Σ pᵢ · log₂(pᵢ/qᵢ)
-        
-        - D_KL = 0 wenn P = Q
-        - D_KL > 0 sonst (asymmetrisch!)
-        """)
+        p_array = np.array(probs)
+        H = entropy(p_array)
+        H_max = np.log2(n_classes)
 
-        st.markdown("**Verteilung P (wahre Verteilung):**")
-        p_a = st.slider("P(Klasse 1)", 0.01, 0.99, 0.7, 0.01, key="pa")
+        st.metric("Entropie H", f"{H:.4f} bit")
+        st.metric("Maximale Entropie", f"{H_max:.4f} bit")
+        st.metric("Relative Entropie", f"{H/H_max:.1%}")
 
-        st.markdown("**Verteilung Q (Modell-Verteilung):**")
-        q_a = st.slider("Q(Klasse 1)", 0.01, 0.99, 0.3, 0.01, key="qa")
+    with col_ent2:
+        fig_ent, ax_ent = plt.subplots(figsize=(6, 5))
+        ax_ent.bar(range(1, n_classes + 1), p_array, color=plt.cm.viridis(np.linspace(0.2, 0.8, n_classes)))
+        ax_ent.set_xlabel('Klasse')
+        ax_ent.set_ylabel('Wahrscheinlichkeit')
+        ax_ent.set_title(f'Verteilung (Entropie = {H:.3f} bit)', fontweight='bold')
+        ax_ent.set_ylim(0, 1)
+        st.pyplot(fig_ent)
 
-        P = np.array([p_a, 1-p_a])
-        Q = np.array([q_a, 1-q_a])
-        kl = kl_divergence(P, Q)
+    st.subheader("Entropie-Vergleich: Sicher vs. Unsicher")
+    col_comp1, col_comp2, col_comp3 = st.columns(3)
 
-        st.metric("D_KL(P||Q)", f"{kl:.4f} Bit")
+    with col_comp1:
+        p_certain = np.array([0.99, 0.01])
+        H_certain = entropy(p_certain)
+        st.metric("Sichere Verteilung", f"H = {H_certain:.4f}")
+        st.caption("[0.99, 0.01] — fast sicher")
 
-        st.markdown("""
+    with col_comp2:
+        p_balanced = np.array([0.5, 0.5])
+        H_balanced = entropy(p_balanced)
+        st.metric("Ausgewogen", f"H = {H_balanced:.4f}")
+        st.caption("[0.5, 0.5] — maximale Unsicherheit")
+
+    with col_comp3:
+        p_uniform = np.array([0.25, 0.25, 0.25, 0.25])
+        H_uniform = entropy(p_uniform)
+        st.metric("Gleichverteilung (4)", f"H = {H_uniform:.4f}")
+        st.caption("[0.25, 0.25, 0.25, 0.25] — H_max = 2.0")
+
+    st.subheader("Cross-Entropy & KL-Divergenz")
+    st.markdown(r"""
+    - **Cross-Entropy:** $H(P, Q) = -\sum_i p_i \cdot \log(q_i)$ — wie gut approximiert Q die Verteilung P?
+    - **KL-Divergenz:** $D_{KL}(P||Q) = \sum_i p_i \cdot \log\frac{p_i}{q_i}$ — "Abstand" zwischen zwei Verteilungen
+
+    Beides sind **Loss-Funktionen** im Machine Learning!
+    """)
+
+    if st.button("🔬 Cross-Entropy & KL-Divergenz berechnen"):
+        p_true = np.array([1.0, 0.0])  # Wahre Klasse: 0
+        q_preds = [
+            ("Perfekte Vorhersage", np.array([0.99, 0.01])),
+            ("Gute Vorhersage", np.array([0.8, 0.2])),
+            ("Unsicher", np.array([0.5, 0.5])),
+            ("Falsch", np.array([0.1, 0.9])),
+        ]
+
+        st.markdown("| Vorhersage-Qualität | Cross-Entropy | KL-Divergenz |")
+        st.markdown("|-------------------|--------------|-------------|")
+        for name, q in q_preds:
+            ce = cross_entropy(p_true, q)
+            kl = kl_divergence(p_true, q)
+            st.markdown(f"| {name} | {ce:.4f} | {kl:.4f} |")
+
+        st.info("""
         **Interpretation:**
-        - D_KL = 0: Perfekte Übereinstimmung
-        - D_KL klein: Ähnliche Verteilungen
-        - D_KL groß: Sehr unterschiedliche Verteilungen
+        - Perfekte Vorhersage → Cross-Entropy ≈ 0
+        - Falsche Vorhersage → Cross-Entropy sehr hoch
+        - KL-Divergenz = Cross-Entropy - Entropie(P)
         """)
 
-# ═══════════════════════════════════════════════════════════════════════════
-# DISTANZMETRIKEN
-# ═══════════════════════════════════════════════════════════════════════════
-elif page == "Distanzmetriken":
-    st.header("📏 Distanzmetriken vergleichen")
+# ═══════════════════════════════════════════════════════════════
+# Tab 3: Distanzmetriken
+# ═══════════════════════════════════════════════════════════════
+with tab3:
+    st.header("📏 Distanzmetriken")
 
     st.markdown("""
-    Distanzmetriken messen, wie "ähnlich" oder "verschieden" zwei Vektoren sind.
-    Die Wahl der Metrik beeinflusst ML-Algorithmen wie k-NN, Clustering und Embedding-Vergleiche.
+    Distanzmetriken sind fundamental für viele ML-Algorithmen (k-NN, Clustering, etc.).
+    Unterschiedliche Metriken messen "Nähe" unterschiedlich.
     """)
 
-    st.subheader("Interaktiver Vergleich")
+    st.subheader("Interaktiver Distanz-Vergleich")
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("**Vektor A**")
-        a1 = st.slider("A[0]", -5.0, 5.0, 1.0, 0.5, key="a1")
-        a2 = st.slider("A[1]", -5.0, 5.0, 0.0, 0.5, key="a2")
+    col_dist1, col_dist2 = st.columns([1, 2])
 
-    with col2:
-        st.markdown("**Vektor B**")
-        b1 = st.slider("B[0]", -5.0, 5.0, 0.0, 0.5, key="b1")
-        b2 = st.slider("B[1]", -5.0, 5.0, 1.0, 0.5, key="b2")
+    with col_dist1:
+        st.markdown("**Punkt A**")
+        a1 = st.slider("A₁", -5.0, 5.0, 1.0, 0.1, key="a1")
+        a2 = st.slider("A₂", -5.0, 5.0, 0.0, 0.1, key="a2")
+        st.markdown("**Punkt B**")
+        b1 = st.slider("B₁", -5.0, 5.0, 0.0, 0.1, key="b1")
+        b2 = st.slider("B₂", -5.0, 5.0, 1.0, 0.1, key="b2")
 
-    a = np.array([a1, a2])
-    b = np.array([b1, b2])
+        a = np.array([a1, a2])
+        b = np.array([b1, b2])
 
-    eucl = euclidean_distance(a, b)
-    cos_sim = cosine_similarity(a, b)
-    cos_dist = cosine_distance(a, b)
-    manhattan = np.sum(np.abs(a - b))
+        eucl = euclidean_distance(a, b)
+        cos_sim = cosine_similarity(a, b)
+        cos_dist = cosine_distance(a, b)
+        manhattan = np.sum(np.abs(a - b))
 
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("Euklidisch", f"{eucl:.3f}")
-    with col2:
-        st.metric("Manhattan", f"{manhattan:.3f}")
-    with col3:
-        st.metric("Cosinus-Ähnlichkeit", f"{cos_sim:.3f}")
-    with col4:
-        st.metric("Cosinus-Distanz", f"{cos_dist:.3f}")
+        st.metric("Euklidische Distanz", f"{eucl:.4f}")
+        st.metric("Manhattan-Distanz", f"{manhattan:.4f}")
+        st.metric("Cosinus-Ähnlichkeit", f"{cos_sim:.4f}")
+        st.metric("Cosinus-Distanz", f"{cos_dist:.4f}")
 
-    # Visualisierung
-    fig, ax = plt.subplots(figsize=(8, 8))
-    ax.quiver(0, 0, a[0], a[1], angles="xy", scale_units="xy", scale=1,
-              color="#FF6B6B", width=0.02, label=f"A ({a[0]}, {a[1]})")
-    ax.quiver(0, 0, b[0], b[1], angles="xy", scale_units="xy", scale=1,
-              color="#4ECDC4", width=0.02, label=f"B ({b[0]}, {b[1]})")
+    with col_dist2:
+        fig_dist, ax_dist = plt.subplots(figsize=(7, 7))
+        ax_dist.quiver(0, 0, a[0], a[1], angles='xy', scale_units='xy', scale=1,
+                       color='blue', width=0.015, label=f'A ({a[0]}, {a[1]})')
+        ax_dist.quiver(0, 0, b[0], b[1], angles='xy', scale_units='xy', scale=1,
+                       color='red', width=0.015, label=f'B ({b[0]}, {b[1]})')
 
-    # Euklidische Distanz als gestrichelte Linie
-    ax.plot([a[0], b[0]], [a[1], b[1]], "gray", linestyle="--", alpha=0.5,
-            label=f"Euklidisch: {eucl:.2f}")
+        # Euklidische Distanz als gestrichelte Linie
+        ax_dist.plot([a[0], b[0]], [a[1], b[1]], 'k--', alpha=0.5, linewidth=1,
+                     label=f'Euklid: {eucl:.2f}')
 
-    r = max(abs(a1), abs(a2), abs(b1), abs(b2)) * 1.3
-    ax.set_xlim(-r, r)
-    ax.set_ylim(-r, r)
-    ax.set_xlabel("Dimension 1")
-    ax.set_ylabel("Dimension 2")
-    ax.set_title("Vektoren und ihre Distanzen")
-    ax.legend()
-    ax.grid(True, alpha=0.3)
-    ax.set_aspect("equal")
-    ax.axhline(y=0, color="black", linewidth=0.5)
-    ax.axvline(x=0, color="black", linewidth=0.5)
+        # Manhattan-Distanz als Treppenlinie
+        ax_dist.plot([a[0], a[0], b[0]], [a[1], b[1], b[1]], 'g--', alpha=0.5, linewidth=1,
+                     label=f'Manhattan: {manhattan:.2f}')
 
-    st.pyplot(fig)
+        # Winkel für Cosinus
+        angle_a = np.arctan2(a[1], a[0])
+        angle_b = np.arctan2(b[1], b[0])
+        arc = np.linspace(min(angle_a, angle_b), max(angle_a, angle_b), 50)
+        r = 1.5
+        ax_dist.plot(r * np.cos(arc), r * np.sin(arc), 'purple', linewidth=1.5,
+                     label=f'Winkel: {np.abs(angle_a - angle_b):.2f} rad')
 
-    st.subheader("Metriken im Überblick")
+        ax_dist.set_xlim(-6, 6)
+        ax_dist.set_ylim(-6, 6)
+        ax_dist.axhline(0, color='gray', linewidth=0.5)
+        ax_dist.axvline(0, color='gray', linewidth=0.5)
+        ax_dist.set_aspect('equal')
+        ax_dist.legend(loc='upper right')
+        ax_dist.set_title('Vektoren & Distanzen', fontweight='bold')
+        ax_dist.grid(True, alpha=0.3)
+        st.pyplot(fig_dist)
+
+    st.subheader("📖 Distanzmetriken im Vergleich")
     st.markdown("""
     | Metrik | Formel | Anwendung |
     |--------|--------|-----------|
-    | **Euklidisch (L2)** | √Σ(aᵢ - bᵢ)² | k-NN, Clustering, allgemein |
-    | **Manhattan (L1)** | Σ|aᵢ - bᵢ| | Hochdimensionale Daten, robust gegen Ausreißer |
-    | **Cosinus-Ähnlichkeit** | a·b / (||a||·||b||) | Text-Embeddings, Empfehlungssysteme |
-    | **Cosinus-Distanz** | 1 - Cosinus-Ähnlichkeit | Gleiche Anwendung wie Cosinus-Ähnlichkeit |
+    | **Euklidisch (L2)** | $\\sqrt{\\sum (a_i - b_i)^2}$ | k-NN, Clustering, "Luftlinie" |
+    | **Manhattan (L1)** | $\\sum |a_i - b_i|$ | Hochdimensionale Daten, "Taxi-Distanz" |
+    | **Cosinus-Ähnlichkeit** | $\\frac{a \\cdot b}{||a|| \\cdot ||b||}$ | Text-Ähnlichkeit, Empfehlungssysteme |
+    | **Cosinus-Distanz** | $1 - \\text{cosine\\_similarity}$ | Gleiche Anwendung wie Cosinus |
     """)
 
-# ═══════════════════════════════════════════════════════════════════════════
-# AKTIVIERUNGSFUNKTIONEN
-# ═══════════════════════════════════════════════════════════════════════════
-elif page == "Aktivierungsfunktionen":
-    st.header("🔧 Aktivierungsfunktionen")
+# ═══════════════════════════════════════════════════════════════
+# Tab 4: Aktivierungsfunktionen
+# ═══════════════════════════════════════════════════════════════
+with tab4:
+    st.header("🧮 Aktivierungsfunktionen")
 
     st.markdown("""
-    Aktivierungsfunktionen bringen Nichtlinearität in neuronale Netze.
-    Ohne sie wäre jedes NN nur eine lineare Transformation!
+    Aktivierungsfunktionen bringen **Nichtlinearität** in Neuronale Netze.
+    Ohne sie wäre ein NN nur eine lineare Transformation!
     """)
 
-    func = st.selectbox("Funktion", ["Sigmoid", "Softmax", "ReLU (Vergleich)"])
+    x_act = np.linspace(-5, 5, 200)
 
-    x = np.linspace(-5, 5, 200)
+    fig_act, axes_act = plt.subplots(2, 2, figsize=(12, 10))
 
-    if func == "Sigmoid":
-        y = sigmoid(x)
-        fig, ax = plt.subplots(figsize=(8, 4))
-        ax.plot(x, y, linewidth=2, color="#FF6B6B")
-        ax.set_title("Sigmoid: f(x) = 1/(1+e^(-x))")
-        ax.set_xlabel("x")
-        ax.set_ylabel("f(x)")
-        ax.grid(True, alpha=0.3)
-        ax.axhline(y=0.5, color="gray", linestyle="--", alpha=0.5)
-        st.pyplot(fig)
+    # Sigmoid
+    axes_act[0, 0].plot(x_act, sigmoid(x_act), 'b-', linewidth=2)
+    axes_act[0, 0].axhline(0, color='gray', linestyle='--', linewidth=0.5)
+    axes_act[0, 0].axhline(1, color='gray', linestyle='--', linewidth=0.5)
+    axes_act[0, 0].axvline(0, color='gray', linestyle='--', linewidth=0.5)
+    axes_act[0, 0].set_title('Sigmoid: σ(x) = 1/(1+e⁻ˣ)', fontweight='bold')
+    axes_act[0, 0].set_ylim(-0.1, 1.1)
+    axes_act[0, 0].grid(True, alpha=0.3)
 
-        st.markdown("""
-        **Eigenschaften:**
-        - Ausgabe: (0, 1) — gut für Wahrscheinlichkeiten
-        - Problem: "Vanishing Gradient" bei großen |x|
-        - Früher Standard, heute meist durch ReLU ersetzt
-        """)
+    # ReLU
+    axes_act[0, 1].plot(x_act, np.maximum(0, x_act), 'r-', linewidth=2)
+    axes_act[0, 1].axhline(0, color='gray', linestyle='--', linewidth=0.5)
+    axes_act[0, 1].axvline(0, color='gray', linestyle='--', linewidth=0.5)
+    axes_act[0, 1].set_title('ReLU: f(x) = max(0, x)', fontweight='bold')
+    axes_act[0, 1].grid(True, alpha=0.3)
 
-    elif func == "Softmax":
-        logits = np.array([2.0, 1.0, 0.1, -0.5, -1.0])
-        probs = softmax(logits)
+    # Softmax (2D Demo)
+    x_soft = np.linspace(-2, 2, 50)
+    X_soft, Y_soft = np.meshgrid(x_soft, x_soft)
+    points = np.stack([X_soft.ravel(), Y_soft.ravel()], axis=1)
+    sm = softmax(points)
+    axes_act[1, 0].contourf(X_soft, Y_soft, sm[:, 0].reshape(50, 50), levels=20, cmap='RdYlBu')
+    axes_act[1, 0].set_title('Softmax (2-Klassen): P(Klasse 1)', fontweight='bold')
+    axes_act[1, 0].set_xlabel('Logit 1')
+    axes_act[1, 0].set_ylabel('Logit 2')
 
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
+    # Tanh
+    axes_act[1, 1].plot(x_act, np.tanh(x_act), 'g-', linewidth=2)
+    axes_act[1, 1].axhline(-1, color='gray', linestyle='--', linewidth=0.5)
+    axes_act[1, 1].axhline(1, color='gray', linestyle='--', linewidth=0.5)
+    axes_act[1, 1].axvline(0, color='gray', linestyle='--', linewidth=0.5)
+    axes_act[1, 1].set_title('Tanh: f(x) = (eˣ-e⁻ˣ)/(eˣ+e⁻ˣ)', fontweight='bold')
+    axes_act[1, 1].set_ylim(-1.1, 1.1)
+    axes_act[1, 1].grid(True, alpha=0.3)
 
-        ax1.bar(range(5), logits, color="#4ECDC4", edgecolor="white")
-        ax1.set_title("Logits (Rohwerte)")
-        ax1.set_xlabel("Klasse")
-        ax1.set_ylabel("Wert")
+    plt.tight_layout()
+    st.pyplot(fig_act)
 
-        ax2.bar(range(5), probs, color="#FF6B6B", edgecolor="white")
-        ax2.set_title("Softmax (Wahrscheinlichkeiten)")
-        ax2.set_xlabel("Klasse")
-        ax2.set_ylabel("Wahrscheinlichkeit")
-        ax2.set_ylim(0, 1)
+    st.subheader("📖 Vergleich")
+    st.markdown("""
+    | Funktion | Bereich | Vorteil | Nachteil |
+    |----------|---------|---------|----------|
+    | **Sigmoid** | (0, 1) | Glatt, interpretierbar als Wahrscheinlichkeit | Vanishing Gradient |
+    | **ReLU** | [0, ∞) | Kein Vanishing Gradient, schnell | "Dying ReLU" |
+    | **Tanh** | (-1, 1) | Null-zentriert | Vanishing Gradient |
+    | **Softmax** | (0, 1), Σ=1 | Wahrscheinlichkeitsverteilung | Nur für Output-Layer |
+    """)
 
-        st.pyplot(fig)
+st.sidebar.markdown("""
+### 📚 Über diese App
 
-        st.markdown("""
-        **Eigenschaften:**
-        - Wandelt Logits in Wahrscheinlichkeiten um (Summe = 1)
-        - Numerisch stabil durch Subtraktion des Maximums
-        - Standard für Multi-Klassen-Klassifikation
-        """)
+Interaktive Exploration der **mathematischen Grundlagen**
+des Machine Learning.
 
-    else:
-        y_relu = np.maximum(0, x)
-        y_sigmoid = sigmoid(x)
+**Funktionen:**
+- 📉 Gradient Descent in 1D & 2D
+- 🎲 Entropie, Cross-Entropy, KL-Divergenz
+- 📏 Euklidisch, Manhattan, Cosinus
+- 🧮 Sigmoid, ReLU, Tanh, Softmax
 
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
-
-        ax1.plot(x, y_relu, linewidth=2, color="#FF6B6B", label="ReLU")
-        ax1.plot(x, y_sigmoid, linewidth=2, color="#4ECDC4", label="Sigmoid")
-        ax1.set_title("ReLU vs. Sigmoid")
-        ax1.set_xlabel("x")
-        ax1.set_ylabel("f(x)")
-        ax1.legend()
-        ax1.grid(True, alpha=0.3)
-
-        # Gradienten
-        relu_grad = (x > 0).astype(float)
-        sigmoid_grad = y_sigmoid * (1 - y_sigmoid)
-
-        ax2.plot(x, relu_grad, linewidth=2, color="#FF6B6B", label="ReLU-Gradient")
-        ax2.plot(x, sigmoid_grad, linewidth=2, color="#4ECDC4", label="Sigmoid-Gradient")
-        ax2.set_title("Gradienten im Vergleich")
-        ax2.set_xlabel("x")
-        ax2.set_ylabel("f'(x)")
-        ax2.legend()
-        ax2.grid(True, alpha=0.3)
-
-        st.pyplot(fig)
-
-        st.markdown("""
-        **ReLU-Vorteile:**
-        - Kein Vanishing Gradient für x > 0
-        - Schnellere Berechnung (kein exp)
-        - Führt zu sparsen Aktivierungen (viele Nullen)
-        
-        **ReLU-Nachteil:**
-        - "Dying ReLU": Neuronen mit x ≤ 0 lernen nie wieder
-        """)
-
-st.sidebar.markdown("---")
-st.sidebar.markdown("📚 **Mathe-Algorithmen für ML**")
-st.sidebar.markdown("[GitHub Repository](https://github.com/mark-baumann/mathe-algorithmen)")
+**Code:** `math_algorithms.py` im Repo
+""")

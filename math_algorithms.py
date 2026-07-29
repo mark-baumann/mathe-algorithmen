@@ -6,7 +6,7 @@ die mathematischen Grundlagen für KI.
 """
 
 import numpy as np
-from typing import Tuple
+from typing import Callable, Tuple
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -27,7 +27,10 @@ def sigmoid(x: np.ndarray) -> np.ndarray:
 
 def normalize(x: np.ndarray) -> np.ndarray:
     """Min-Max-Normalisierung auf [0, 1]."""
-    return (x - x.min()) / (x.max() - x.min() + 1e-8)
+    x_min, x_max = x.min(), x.max()
+    if abs(x_max - x_min) < 1e-10:
+        return np.zeros_like(x)
+    return (x - x_min) / (x_max - x_min)
 
 
 def standardize(x: np.ndarray) -> np.ndarray:
@@ -40,7 +43,8 @@ def standardize(x: np.ndarray) -> np.ndarray:
 # ═══════════════════════════════════════════════════════════════
 
 def gradient_descent_1d(
-    f: callable, df: callable,
+    f: Callable[[float], float],
+    df: Callable[[float], float],
     x0: float, lr: float = 0.1,
     epochs: int = 100, tol: float = 1e-6
 ) -> Tuple[float, list]:
@@ -58,15 +62,17 @@ def gradient_descent_1d(
         x_new = x - lr * grad
         history.append(x_new)
         if abs(x_new - x) < tol:
+            x = x_new
             break
         x = x_new
     return x, history
 
 
 def gradient_descent_2d(
-    f: callable, grad_f: callable,
+    f: Callable[[np.ndarray], float],
+    grad_f: Callable[[np.ndarray], np.ndarray],
     x0: np.ndarray, lr: float = 0.1,
-    epochs: int = 100
+    epochs: int = 100, tol: float = 1e-6
 ) -> Tuple[np.ndarray, list]:
     """
     Gradient Descent für mehrdimensionale Funktionen.
@@ -80,8 +86,12 @@ def gradient_descent_2d(
     history = [x.copy()]
     for _ in range(epochs):
         g = grad_f(x)
-        x = x - lr * g
-        history.append(x.copy())
+        x_new = x - lr * g
+        history.append(x_new.copy())
+        if np.linalg.norm(x_new - x) < tol:
+            x = x_new
+            break
+        x = x_new
     return x, history
 
 
@@ -102,10 +112,10 @@ def cross_entropy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 
 
 def kl_divergence(p: np.ndarray, q: np.ndarray) -> float:
-    """Kullback-Leibler-Divergenz: D_KL(P||Q)"""
+    """Kullback-Leibler-Divergenz: D_KL(P||Q) in Bits (log2)."""
     p = np.clip(p, 1e-10, 1)
     q = np.clip(q, 1e-10, 1)
-    return np.sum(p * np.log(p / q))
+    return np.sum(p * np.log2(p / q))
 
 
 # ═══════════════════════════════════════════════════════════════

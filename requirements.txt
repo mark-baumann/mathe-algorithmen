@@ -1,0 +1,7 @@
+# Laufzeitumgebung der Notebook-Reihe "Mathematische Grundlagen des Maschinellen Lernens".
+# Installation:  pip install -r requirements.txt
+
+numpy>=1.24
+scipy>=1.10
+matplotlib>=3.7
+jupyterlab>=4.0

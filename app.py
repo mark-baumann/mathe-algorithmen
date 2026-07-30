@@ -4,19 +4,25 @@ Streamlit-App: Mathematische Algorithmen für Machine Learning
 Gradient Descent animieren, Entropie berechnen, Distanzmetriken vergleichen.
 """
 
-import streamlit as st
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
-import sys
 import os
+import sys
+
+import matplotlib.pyplot as plt
+import numpy as np
+import streamlit as st
 
 sys.path.insert(0, os.path.dirname(__file__))
 from math_algorithms import (
-    gradient_descent_1d, gradient_descent_2d,
-    entropy, cross_entropy, kl_divergence,
-    euclidean_distance, cosine_similarity, cosine_distance,
-    softmax, sigmoid, normalize, standardize,
+    cosine_distance,
+    cosine_similarity,
+    cross_entropy,
+    entropy,
+    euclidean_distance,
+    gradient_descent_1d,
+    gradient_descent_2d,
+    kl_divergence,
+    sigmoid,
+    softmax,
 )
 
 st.set_page_config(page_title="Mathe-Algorithmen für ML", layout="wide")
@@ -24,7 +30,10 @@ st.title("📐 Mathematische Algorithmen für Machine Learning")
 st.markdown("### Gradient Descent, Entropie & Distanzmetriken — interaktiv")
 
 tab1, tab2, tab3, tab4 = st.tabs([
-    "📉 Gradient Descent", "🎲 Entropie & Information", "📏 Distanzmetriken", "🧮 Aktivierungsfunktionen"
+    "📉 Gradient Descent",
+    "🎲 Entropie & Information",
+    "📏 Distanzmetriken",
+    "🧮 Aktivierungsfunktionen",
 ])
 
 # ═══════════════════════════════════════════════════════════════
@@ -49,7 +58,11 @@ with tab1:
 
     with col_gd1:
         x0 = st.slider("Startpunkt $x_0$", -10.0, 10.0, 5.0, 0.5)
-        lr = st.select_slider("Learning Rate $\eta$", options=[0.01, 0.05, 0.1, 0.2, 0.5, 0.9], value=0.1)
+        lr = st.select_slider(
+            "Learning Rate η",
+            options=[0.01, 0.05, 0.1, 0.2, 0.5, 0.9],
+            value=0.1,
+        )
         n_steps = st.slider("Anzahl Schritte", 5, 50, 20)
 
     with col_gd2:
@@ -78,7 +91,7 @@ with tab1:
         ax_gd.grid(True, alpha=0.3)
         st.pyplot(fig_gd)
 
-        st.metric("Gefundenes Minimum", f"x = {x_min:.6f}", f"Ziel: 0.0")
+        st.metric("Gefundenes Minimum", f"x = {x_min:.6f}", "Ziel: 0.0")
 
     st.subheader("2D Gradient Descent: $f(x, y) = x^2 + y^2$")
 
@@ -87,7 +100,12 @@ with tab1:
     with col_gd2d1:
         x0_2d = st.slider("Startpunkt x₀", -10.0, 10.0, 3.0, 0.5, key="x0_2d")
         y0_2d = st.slider("Startpunkt y₀", -10.0, 10.0, 4.0, 0.5, key="y0_2d")
-        lr_2d = st.select_slider("Learning Rate", options=[0.01, 0.05, 0.1, 0.2, 0.5], value=0.1, key="lr_2d")
+        lr_2d = st.select_slider(
+            "Learning Rate",
+            options=[0.01, 0.05, 0.1, 0.2, 0.5],
+            value=0.1,
+            key="lr_2d",
+        )
         n_steps_2d = st.slider("Schritte", 5, 50, 15, key="steps_2d")
 
     with col_gd2d2:
@@ -102,8 +120,9 @@ with tab1:
 
         # Contour-Plot
         fig_2d, ax_2d = plt.subplots(figsize=(8, 7))
-        x_range_2d = np.linspace(-max(abs(x0_2d), abs(y0_2d))*1.5, max(abs(x0_2d), abs(y0_2d))*1.5, 200)
-        y_range_2d = np.linspace(-max(abs(x0_2d), abs(y0_2d))*1.5, max(abs(x0_2d), abs(y0_2d))*1.5, 200)
+        max_abs = max(abs(x0_2d), abs(y0_2d)) * 1.5
+        x_range_2d = np.linspace(-max_abs, max_abs, 200)
+        y_range_2d = np.linspace(-max_abs, max_abs, 200)
         X, Y = np.meshgrid(x_range_2d, y_range_2d)
         Z = X**2 + Y**2
 
@@ -111,11 +130,17 @@ with tab1:
         ax_2d.clabel(contour, inline=True, fontsize=8)
 
         hist_arr = np.array(history_2d)
-        ax_2d.plot(hist_arr[:, 0], hist_arr[:, 1], 'r-o', markersize=6, linewidth=2, label='GD-Pfad')
+        ax_2d.plot(
+            hist_arr[:, 0], hist_arr[:, 1],
+            'r-o', markersize=6, linewidth=2, label='GD-Pfad',
+        )
         ax_2d.scatter([x0_2d], [y0_2d], c='orange', s=150, zorder=5, edgecolors='black',
                       marker='s', label=f'Start ({x0_2d}, {y0_2d})')
-        ax_2d.scatter([x_min_2d[0]], [x_min_2d[1]], c='green', s=200, zorder=5,
-                      edgecolors='black', marker='*', label=f'Min ({x_min_2d[0]:.3f}, {x_min_2d[1]:.3f})')
+        ax_2d.scatter(
+            [x_min_2d[0]], [x_min_2d[1]],
+            c='green', s=200, zorder=5, edgecolors='black', marker='*',
+            label=f'Min ({x_min_2d[0]:.3f}, {x_min_2d[1]:.3f})',
+        )
         ax_2d.set_xlabel('x')
         ax_2d.set_ylabel('y')
         ax_2d.set_title('2D Gradient Descent auf f(x,y) = x² + y²', fontweight='bold')
@@ -158,7 +183,13 @@ with tab2:
         probs = []
         remaining = 1.0
         for i in range(n_classes - 1):
-            p = st.slider(f"p_{i+1}", 0.0, remaining, remaining / (n_classes - i), 0.01, key=f"p_{i}")
+            p = st.slider(
+                f"p_{i+1}",
+                0.0, remaining,
+                remaining / (n_classes - i),
+                0.01,
+                key=f"p_{i}",
+            )
             probs.append(p)
             remaining -= p
         probs.append(remaining)
@@ -174,7 +205,10 @@ with tab2:
 
     with col_ent2:
         fig_ent, ax_ent = plt.subplots(figsize=(6, 5))
-        ax_ent.bar(range(1, n_classes + 1), p_array, color=plt.cm.viridis(np.linspace(0.2, 0.8, n_classes)))
+        ax_ent.bar(
+            range(1, n_classes + 1), p_array,
+            color=plt.cm.viridis(np.linspace(0.2, 0.8, n_classes)),
+        )
         ax_ent.set_xlabel('Klasse')
         ax_ent.set_ylabel('Wahrscheinlichkeit')
         ax_ent.set_title(f'Verteilung (Entropie = {H:.3f} bit)', fontweight='bold')
@@ -204,8 +238,10 @@ with tab2:
 
     st.subheader("Cross-Entropy & KL-Divergenz")
     st.markdown(r"""
-    - **Cross-Entropy:** $H(P, Q) = -\sum_i p_i \cdot \log(q_i)$ — wie gut approximiert Q die Verteilung P?
-    - **KL-Divergenz:** $D_{KL}(P||Q) = \sum_i p_i \cdot \log\frac{p_i}{q_i}$ — "Abstand" zwischen zwei Verteilungen
+    - **Cross-Entropy:** $H(P, Q) = -\sum_i p_i \cdot \log(q_i)$
+      — wie gut approximiert Q die Verteilung P?
+    - **KL-Divergenz:** $D_{KL}(P||Q) = \sum_i p_i \cdot \log\frac{p_i}{q_i}$
+      — "Abstand" zwischen zwei Verteilungen
 
     Beides sind **Loss-Funktionen** im Machine Learning!
     """)
@@ -308,7 +344,7 @@ with tab3:
     |--------|--------|-----------|
     | **Euklidisch (L2)** | $\\sqrt{\\sum (a_i - b_i)^2}$ | k-NN, Clustering, "Luftlinie" |
     | **Manhattan (L1)** | $\\sum |a_i - b_i|$ | Hochdimensionale Daten, "Taxi-Distanz" |
-    | **Cosinus-Ähnlichkeit** | $\\frac{a \\cdot b}{||a|| \\cdot ||b||}$ | Text-Ähnlichkeit, Empfehlungssysteme |
+    | **Cosinus-Ähnlichkeit** | $\\frac{a \\cdot b}{||a|| \\cdot ||b||}$ | Text-Ähnlichkeit |
     | **Cosinus-Distanz** | $1 - \\text{cosine\\_similarity}$ | Gleiche Anwendung wie Cosinus |
     """)
 

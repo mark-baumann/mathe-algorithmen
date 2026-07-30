@@ -1,22 +1,22 @@
+# Jupyter
+.ipynb_checkpoints/
+*.nbconvert.ipynb
+
 # Python
 __pycache__/
 *.py[cod]
-*.egg-info/
-dist/
-build/
-.pytest_cache/
 
-# Virtual Environment
+# Virtuelle Umgebungen
 .venv/
 venv/
 env/
 
-# IDE
+# Editoren
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# OS
+# Betriebssystem
 .DS_Store
 Thumbs.db

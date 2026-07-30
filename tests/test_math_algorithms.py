@@ -1,25 +1,103 @@
 """
-Tests für math_algorithms.py
-=============================
-Testet alle mathematischen Algorithmen mit pytest.
+Tests für die mathematischen Algorithmen aus den Jupyter-Notebooks.
+=================================================================
+Testet alle Funktionen: Gradient Descent, Entropie, Distanzmetriken, etc.
 """
+
+from collections.abc import Callable
 
 import numpy as np
 
-from math_algorithms import (
-    cosine_distance,
-    cosine_similarity,
-    cross_entropy,
-    entropy,
-    euclidean_distance,
-    gradient_descent_1d,
-    gradient_descent_2d,
-    kl_divergence,
-    normalize,
-    sigmoid,
-    softmax,
-    standardize,
-)
+
+# ═══════════════════════════════════════════════════════════════
+# Algorithmen (aus math_algorithms.py extrahiert)
+# ═══════════════════════════════════════════════════════════════
+
+def softmax(x: np.ndarray) -> np.ndarray:
+    shifted = x - np.max(x, axis=-1, keepdims=True)
+    exp = np.exp(shifted)
+    return exp / np.sum(exp, axis=-1, keepdims=True)
+
+
+def sigmoid(x: np.ndarray) -> np.ndarray:
+    return 1 / (1 + np.exp(-np.clip(x, -500, 500)))
+
+
+def normalize(x: np.ndarray) -> np.ndarray:
+    x_min, x_max = x.min(), x.max()
+    if abs(x_max - x_min) < 1e-10:
+        return np.zeros_like(x)
+    return (x - x_min) / (x_max - x_min)
+
+
+def standardize(x: np.ndarray) -> np.ndarray:
+    return (x - x.mean()) / (x.std() + 1e-8)
+
+
+def gradient_descent_1d(
+    f: Callable[[float], float],
+    df: Callable[[float], float],
+    x0: float, lr: float = 0.1,
+    epochs: int = 100, tol: float = 1e-6
+) -> tuple[float, list]:
+    x = x0
+    history = [x]
+    for _ in range(epochs):
+        grad = df(x)
+        x_new = x - lr * grad
+        history.append(x_new)
+        if abs(x_new - x) < tol:
+            x = x_new
+            break
+        x = x_new
+    return x, history
+
+
+def gradient_descent_2d(
+    f: Callable[[np.ndarray], float],
+    grad_f: Callable[[np.ndarray], np.ndarray],
+    x0: np.ndarray, lr: float = 0.1,
+    epochs: int = 100, tol: float = 1e-6
+) -> tuple[np.ndarray, list]:
+    x = x0.copy()
+    history = [x.copy()]
+    for _ in range(epochs):
+        g = grad_f(x)
+        x_new = x - lr * g
+        history.append(x_new.copy())
+        if np.linalg.norm(x_new - x) < tol:
+            x = x_new
+            break
+        x = x_new
+    return x, history
+
+
+def entropy(p: np.ndarray) -> float:
+    p = np.clip(p, 1e-10, 1)
+    return -np.sum(p * np.log2(p))
+
+
+def cross_entropy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    y_pred = np.clip(y_pred, 1e-10, 1 - 1e-10)
+    return -np.mean(y_true * np.log(y_pred) + (1 - y_true) * np.log(1 - y_pred))
+
+
+def kl_divergence(p: np.ndarray, q: np.ndarray) -> float:
+    p = np.clip(p, 1e-10, 1)
+    q = np.clip(q, 1e-10, 1)
+    return np.sum(p * np.log2(p / q))
+
+
+def euclidean_distance(a: np.ndarray, b: np.ndarray) -> float:
+    return np.sqrt(np.sum((a - b) ** 2))
+
+
+def cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
+    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-8)
+
+
+def cosine_distance(a: np.ndarray, b: np.ndarray) -> float:
+    return 1 - cosine_similarity(a, b)
 
 # ═══════════════════════════════════════════════════════════════
 # Lineare Algebra

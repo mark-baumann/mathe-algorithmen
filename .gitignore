@@ -20,3 +20,5 @@ env/
 # Betriebssystem
 .DS_Store
 Thumbs.db
+.venv
+*.pyc
